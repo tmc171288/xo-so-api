@@ -59,4 +59,18 @@ class HistoryController extends GetxController {
     selectedRegion.value = region;
     loadHistory(refresh: true);
   }
+  /// Group results by date for Table View
+  Map<DateTime, List<LotteryResult>> get groupedResults {
+    final Map<DateTime, List<LotteryResult>> groups = {};
+    for (var result in historyResults) {
+      // Normalize date (ignore time) if needed, but assuming date is parsed cleanly
+      final dateKey = DateTime(result.date.year, result.date.month, result.date.day);
+      if (!groups.containsKey(dateKey)) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey]!.add(result);
+    }
+    // Ensure provinces are sorted consistently within date? Or verify API order.
+    return groups;
+  }
 }

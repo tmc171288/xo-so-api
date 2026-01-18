@@ -191,7 +191,10 @@ class MinhNgocCrawler extends BaseCrawler {
         };
 
         table.find('tr').each((i, tr) => {
-            const firstCell = $(tr).find('td').first().text().trim();
+            // Skip rows that contain nested tables to avoid duplication/mess
+            if ($(tr).find('table').length > 0) return;
+
+            const firstCell = $(tr).children('td').first().text().trim();
 
             // Determine prize key from first cell text
             let prizeKey = null;
@@ -207,7 +210,7 @@ class MinhNgocCrawler extends BaseCrawler {
             if (!prizeKey && $(tr).hasClass('giai_dacbiet')) prizeKey = 'special';
 
             if (prizeKey) {
-                $(tr).find('td').each((j, td) => {
+                $(tr).children('td').each((j, td) => {
                     // The first td is Label (index 0). 
                     // Provinces start from index 1.
                     // j=1 maps to provinces[0], j=2 maps to provinces[1]...
@@ -215,7 +218,8 @@ class MinhNgocCrawler extends BaseCrawler {
                     if (j > 0 && j <= provinces.length) {
                         const provIndex = j - 1;
                         const text = $(td).text().trim();
-                        // Split numbers by hyphens or spaces
+                        // Split numbers by hyphens (simple format) or spaces, but prevent merging separate numbers
+                        // MinhNgoc: "73" or "73 - 12"
                         const numbers = text.replace(/[-]/g, ' ').split(/\s+/).filter(x => x && x.match(/^\d+$/));
 
                         if (prizeKey === 'special') {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/constants/app_colors.dart';
-import '../home/widgets/lottery_result_widget.dart';
+import '../home/widgets/lottery_table_widget.dart';
 import 'history_controller.dart';
 
 class HistoryScreen extends StatelessWidget {
@@ -67,31 +67,36 @@ class HistoryScreen extends StatelessWidget {
               );
             }
 
-            return RefreshIndicator(
-              onRefresh: () => controller.loadHistory(refresh: true),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: controller.historyResults.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == controller.historyResults.length) {
-                    return controller.hasMore.value
-                        ? Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Center(
-                              child: TextButton(
-                                onPressed: () => controller.loadHistory(),
-                                child: const Text('Xem thêm'),
+              return RefreshIndicator(
+                onRefresh: () => controller.loadHistory(refresh: true),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: controller.groupedResults.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == controller.groupedResults.length) {
+                      return controller.hasMore.value
+                          ? Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Center(
+                                child: TextButton(
+                                  onPressed: () => controller.loadHistory(),
+                                  child: const Text('Xem thêm'),
+                                ),
                               ),
-                            ),
-                          )
-                        : const SizedBox(height: 20);
-                  }
-                  return LotteryResultWidget(
-                    result: controller.historyResults[index],
-                  );
-                },
-              ),
-            );
+                            )
+                          : const SizedBox(height: 20);
+                    }
+                    
+                    final dateKey = controller.groupedResults.keys.elementAt(index);
+                    final results = controller.groupedResults[dateKey] ?? [];
+                    
+                    return LotteryTableWidget(
+                      date: results.first.date,
+                      results: results,
+                    );
+                  },
+                ),
+              );
           }),
         ),
       ],
