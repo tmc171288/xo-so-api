@@ -8,14 +8,14 @@ import 'features/home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Hive
   await Hive.initFlutter();
-  
+
   // Initialize services
   await Get.putAsync(() => SocketService().init());
   Get.put(ApiService());
-  
+
   runApp(const MyApp());
 }
 

@@ -18,11 +18,16 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: Obx(() {
           switch (controller.selectedIndex.value) {
-            case 0: return const Text('Xổ Số Trực Tiếp');
-            case 1: return const Text('Lịch Sử Kết Quả');
-            case 2: return const Text('Dự Đoán');
-            case 3: return const Text('Cài Đặt');
-            default: return const Text('Xổ Số Trực Tiếp');
+            case 0:
+              return const Text('Xổ Số Trực Tiếp');
+            case 1:
+              return const Text('Lịch Sử Kết Quả');
+            case 2:
+              return const Text('Dự Đoán');
+            case 3:
+              return const Text('Cài Đặt');
+            default:
+              return const Text('Xổ Số Trực Tiếp');
           }
         }),
         actions: [
@@ -34,15 +39,17 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Obx(() => IndexedStack(
-        index: controller.selectedIndex.value,
-        children: [
-          _buildHomeContent(controller),
-          const HistoryScreen(),
-          const Center(child: Text("Dự đoán (Coming Soon)")),
-          const Center(child: Text("Cài đặt (Coming Soon)")),
-        ],
-      )),
+      body: Obx(
+        () => IndexedStack(
+          index: controller.selectedIndex.value,
+          children: [
+            _buildHomeContent(controller),
+            const HistoryScreen(),
+            const Center(child: Text("Dự đoán (Coming Soon)")),
+            const Center(child: Text("Cài đặt (Coming Soon)")),
+          ],
+        ),
+      ),
       bottomNavigationBar: _buildBottomNavigation(controller),
     );
   }
@@ -115,9 +122,7 @@ class HomeScreen extends StatelessWidget {
         Expanded(
           child: Obx(() {
             if (controller.isLoading.value) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const Center(child: CircularProgressIndicator());
             }
 
             if (controller.liveResults.isEmpty) {
@@ -236,34 +241,36 @@ class HomeScreen extends StatelessWidget {
 
   /// Build bottom navigation
   Widget _buildBottomNavigation(HomeController controller) {
-    return Obx(() => BottomNavigationBar(
-      currentIndex: controller.selectedIndex.value,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Trang chủ',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.history),
-          activeIcon: Icon(Icons.history),
-          label: 'Lịch sử',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.lightbulb_outline),
-          activeIcon: Icon(Icons.lightbulb),
-          label: 'Dự đoán',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_outlined),
-          activeIcon: Icon(Icons.settings),
-          label: 'Cài đặt',
-        ),
-      ],
-      onTap: controller.changeIndex,
-    ));
+    return Obx(
+      () => BottomNavigationBar(
+        currentIndex: controller.selectedIndex.value,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Trang chủ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            activeIcon: Icon(Icons.history),
+            label: 'Lịch sử',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.lightbulb_outline),
+            activeIcon: Icon(Icons.lightbulb),
+            label: 'Dự đoán',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings_outlined),
+            activeIcon: Icon(Icons.settings),
+            label: 'Cài đặt',
+          ),
+        ],
+        onTap: controller.changeIndex,
+      ),
+    );
   }
 }

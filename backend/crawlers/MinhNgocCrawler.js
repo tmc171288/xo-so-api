@@ -102,27 +102,37 @@ class MinhNgocCrawler extends BaseCrawler {
         let tableClass = 'bkqmiennam';
         if (region === 'central') tableClass = 'bkqmientrung';
 
-        const table = $(`.box_kqxs .content table.${tableClass}`);
+        let table = $(`.box_kqxs .content table.${tableClass}`);
 
+        // Fallback: If not found, look for any table containing "Giải tám" inside .content
         if (!table.length) {
-            console.log(`Table .${tableClass} not found for ${region}`);
-            return [];
+            console.log(`Specific table .${tableClass} not found. Trying fallback search...`);
+            $('.content table').each((i, el) => {
+                if ($(el).text().includes('Giải tám') || $(el).text().includes('TP.HCM')) {
+                    table = $(el);
+                    console.log('Fallback table found!');
+                    return false; // Break loop
+                }
+            });
         }
 
-        // Handling the multi-column layout is tricky blindly. 
-        // Strategy: iterate headers to find provinces, then mapping rows to column indices.
+        if (!table.length) {
+            console.log(`Table not found for ${region}`);
+            return [];
+        }
 
         const headers = table.find('thead tr th');
         const provinces = [];
 
         headers.each((i, el) => {
             const name = $(el).text().trim();
-            if (name && !name.includes('Giải')) {
+            // Provinces usually not named "Giải..."
+            if (name && !name.includes('Giải') && name.length > 2) {
                 provinces.push({ name, index: i });
             }
         });
 
-        // Current date from title
+        // Date handling reused...
         const dateText = $('.box_kqxs .title').text() || '';
         const dateMatch = dateText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
         let dateStr = new Date().toISOString().split('T')[0];
@@ -142,48 +152,51 @@ class MinhNgocCrawler extends BaseCrawler {
             });
         });
 
-        // Rows mapping (approximate, needs verifying with real HTML)
-        // Usually: G8, G7, G6... Special
-        // Rows have classes like 'giai8', 'giai7'
+        // Robust row mapping via Classes OR Keywords
+        // Map of keywords to keys
+        const keywordMap = {
+            'Giải tám': 'eighth', 'Giải bảy': 'seventh', 'Giải sáu': 'sixth',
+            'Giải năm': 'fifth', 'Giải tư': 'fourth', 'Giải ba': 'third',
+            'Giải nhì': 'second', 'Giải nhất': 'first', 'Giải đặc biệt': 'special'
+        };
 
-        const mapRow = (className, prizeKey) => {
-            table.find(`tr.${className}`).each((i, tr) => {
-                // The first td is the specific prize label, subsequent tds are results
-                // But MinhNgoc layout might have provinces as columns.
-                // Let's assume standard multi-col: 
-                // Col 0: Label
-                // Col 1: Prov 1
-                // Col 2: Prov 2...
+        table.find('tr').each((i, tr) => {
+            const firstCell = $(tr).find('td').first().text().trim();
 
+            // Determine prize key from first cell text
+            let prizeKey = null;
+            for (const [key, value] of Object.entries(keywordMap)) {
+                if (firstCell.includes(key) || $(tr).attr('class')?.includes(`giai${value === 'special' ? '_dacbiet' : key.replace('Giải ', '')}`)) {
+                    prizeKey = value;
+                    break;
+                }
+            }
+
+            // Custom check specifically for G8 if text logic fails
+            if (!prizeKey && $(tr).hasClass('giai8')) prizeKey = 'eighth';
+            if (!prizeKey && $(tr).hasClass('giai_dacbiet')) prizeKey = 'special';
+
+            if (prizeKey) {
                 $(tr).find('td').each((j, td) => {
-                    // Check if this td corresponds to a province column
-                    // The index of td might need offset info if not aligned perfectly.
-                    // Often label is one td.
-
-                    // Helper: Find which province this td belongs to.
-                    // Simplified: assume td index 1 maps to province index 0
+                    // The first td is Label (index 0). 
+                    // Provinces start from index 1.
+                    // j=1 maps to provinces[0], j=2 maps to provinces[1]...
 
                     if (j > 0 && j <= provinces.length) {
                         const provIndex = j - 1;
                         const text = $(td).text().trim();
-                        const numbers = text.split(/\s+/).filter(x => x);
+                        // Split numbers by hyphens or spaces
+                        const numbers = text.replace(/[-]/g, ' ').split(/\s+/).filter(x => x && x.match(/^\d+$/));
 
-                        if (prizeKey === 'special') results[provIndex].prizes.special = text;
-                        else results[provIndex].prizes[prizeKey].push(...numbers);
+                        if (prizeKey === 'special') {
+                            results[provIndex].prizes.special = numbers[0] || text;
+                        } else {
+                            results[provIndex].prizes[prizeKey].push(...numbers);
+                        }
                     }
                 });
-            });
-        };
-
-        mapRow('giai8', 'eighth');
-        mapRow('giai7', 'seventh');
-        mapRow('giai6', 'sixth');
-        mapRow('giai5', 'fifth');
-        mapRow('giai4', 'fourth');
-        mapRow('giai3', 'third');
-        mapRow('giai2', 'second');
-        mapRow('giai1', 'first');
-        mapRow('giai_dacbiet', 'special');
+            }
+        });
 
         return results;
     }
