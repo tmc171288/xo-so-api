@@ -5,8 +5,8 @@ class AppConstants {
   static const String appVersion = '1.0.0';
   
   // API Configuration
-  static const String apiBaseUrl = 'http://127.0.0.1:3000'; // Changed from localhost for web
-  static const String socketUrl = 'http://127.0.0.1:3000';
+  static const String apiBaseUrl = 'http://103.185.184.164:3001';
+  static const String socketUrl = 'http://103.185.184.164:3001';
   
   // Storage Keys
   static const String keyThemeMode = 'theme_mode';

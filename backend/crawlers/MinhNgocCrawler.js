@@ -98,8 +98,16 @@ class MinhNgocCrawler extends BaseCrawler {
 
     parseMultiProvince($, region) {
         const results = [];
-        const table = $('.box_kqxs .content table.bkqmiennam'); // MN and MT use similar structure often labeled miennam or distinct
-        // MinhNgoc logic for MT/MN is complex: multiple columns for provinces.
+        // Dynamic table class based on region
+        let tableClass = 'bkqmiennam';
+        if (region === 'central') tableClass = 'bkqmientrung';
+
+        const table = $(`.box_kqxs .content table.${tableClass}`);
+
+        if (!table.length) {
+            console.log(`Table .${tableClass} not found for ${region}`);
+            return [];
+        }
 
         // Handling the multi-column layout is tricky blindly. 
         // Strategy: iterate headers to find provinces, then mapping rows to column indices.

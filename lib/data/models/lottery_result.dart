@@ -70,23 +70,26 @@ class LotteryResult {
 
   /// Create from JSON
   factory LotteryResult.fromJson(Map<String, dynamic> json) {
+    final prizes = json['prizes'] is Map ? json['prizes'] : {};
     return LotteryResult(
-      id: json['id'] ?? '',
+      id: json['_id'] ?? json['id'] ?? '',
       region: json['region'] ?? '',
-      date: DateTime.parse(json['date']),
+      date: json['date'] != null 
+          ? DateTime.tryParse(json['date'].toString().split('T')[0]) ?? DateTime.now()
+          : DateTime.now(),
       province: json['province'] ?? '',
-      specialPrize: json['specialPrize'] ?? '',
-      firstPrize: List<String>.from(json['firstPrize'] ?? []),
-      secondPrize: List<String>.from(json['secondPrize'] ?? []),
-      thirdPrize: List<String>.from(json['thirdPrize'] ?? []),
-      fourthPrize: List<String>.from(json['fourthPrize'] ?? []),
-      fifthPrize: List<String>.from(json['fifthPrize'] ?? []),
-      sixthPrize: List<String>.from(json['sixthPrize'] ?? []),
-      seventhPrize: List<String>.from(json['seventhPrize'] ?? []),
-      eighthPrize: List<String>.from(json['eighthPrize'] ?? []),
+      specialPrize: prizes['special'] ?? '',
+      firstPrize: List<String>.from(prizes['first'] ?? []),
+      secondPrize: List<String>.from(prizes['second'] ?? []),
+      thirdPrize: List<String>.from(prizes['third'] ?? []),
+      fourthPrize: List<String>.from(prizes['fourth'] ?? []),
+      fifthPrize: List<String>.from(prizes['fifth'] ?? []),
+      sixthPrize: List<String>.from(prizes['sixth'] ?? []),
+      seventhPrize: List<String>.from(prizes['seventh'] ?? []),
+      eighthPrize: List<String>.from(prizes['eighth'] ?? []),
       isLive: json['isLive'] ?? false,
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
+          ? DateTime.tryParse(json['updatedAt'])
           : null,
     );
   }
