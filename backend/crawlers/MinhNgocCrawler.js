@@ -121,18 +121,48 @@ class MinhNgocCrawler extends BaseCrawler {
             return [];
         }
 
-        const headers = table.find('thead tr th');
+        let headers = table.find('thead tr th');
+        // Fallback: Check first row of body if thead is empty
+        if (!headers.length) {
+            headers = table.find('tr').first().find('td, th');
+            // Check if this row looks like a header (contains province names)
+            // Or usually row 0 is date/title, row 1 is provinces.
+            // Let's inspect rows more carefully.
+
+            // Logic: Iterate first few rows to find one with > 1 columns and textual content
+            if (headers.length < 2) {
+                table.find('tr').each((i, row) => {
+                    const cells = $(row).find('td, th');
+                    if (cells.length > 1) { // Likely header row
+                        // Check content. Province names usually don't start with digits.
+                        const firstText = $(cells[0]).text().trim();
+                        if (!firstText.match(/^\d/) && !firstText.includes('Giải')) {
+                            headers = cells;
+                            return false; // Found
+                        }
+                    }
+                });
+            }
+        }
+
         const provinces = [];
 
         headers.each((i, el) => {
             const name = $(el).text().trim();
-            // Provinces usually not named "Giải..."
-            if (name && !name.includes('Giải') && name.length > 2) {
+            // Provinces usually not named "Giải..." and not empty
+            // Some layout has "Tỉnh" as first col.
+            if (name && !name.includes('Giải') && name.length > 2 && !name.includes('Mã')) {
                 provinces.push({ name, index: i });
             }
         });
 
-        // Date handling reused...
+        // Log found provinces for debugging
+        console.log(`Found provinces for ${region}: ${provinces.map(p => p.name).join(', ')}`);
+
+        // If no provinces found, legacy single-col parsing? 
+        // MinhNgoc consistently has headers.
+
+        // Current date from title
         const dateText = $('.box_kqxs .title').text() || '';
         const dateMatch = dateText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
         let dateStr = new Date().toISOString().split('T')[0];
