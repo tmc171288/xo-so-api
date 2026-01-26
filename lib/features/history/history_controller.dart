@@ -59,18 +59,47 @@ class HistoryController extends GetxController {
     selectedRegion.value = region;
     loadHistory(refresh: true);
   }
+
   /// Group results by date for Table View
   Map<DateTime, List<LotteryResult>> get groupedResults {
     final Map<DateTime, List<LotteryResult>> groups = {};
+
+    // Deduplication map to handle potential dirty DB data
+    // Key: "Date_Province" -> Result
+    final Map<String, LotteryResult> uniqueMap = {};
+
     for (var result in historyResults) {
-      // Normalize date (ignore time) if needed, but assuming date is parsed cleanly
-      final dateKey = DateTime(result.date.year, result.date.month, result.date.day);
+      // Normalize date (ignore time)
+      final dateOnly = DateTime(
+        result.date.year,
+        result.date.month,
+        result.date.day,
+      );
+      final key = "${dateOnly.toIso8601String()}_${result.province}";
+
+      // Keep only the latest/first unique entry per province per day
+      if (!uniqueMap.containsKey(key)) {
+        uniqueMap[key] = result;
+      }
+    }
+
+    // Build the groups from unique results
+    for (var result in uniqueMap.values) {
+      final dateKey = DateTime(
+        result.date.year,
+        result.date.month,
+        result.date.day,
+      );
       if (!groups.containsKey(dateKey)) {
         groups[dateKey] = [];
       }
       groups[dateKey]!.add(result);
     }
-    // Ensure provinces are sorted consistently within date? Or verify API order.
+
+    // Sort groups by date descending (optional, ListView index usually handles this via historyResults order but map is unordered)
+    // Actually map insertion order is preserved in Dart, but let's be safe if needed.
+    // Since historyResults is already sorted by backend, uniqueMap iteration should mostly preserve it.
+
     return groups;
   }
 }

@@ -8,9 +8,16 @@ class AppColors {
   static const Color accent = Color(0xFFFF9800);
   
   // Region Colors
+  // Region Colors
   static const Color northColor = Color(0xFFE53935); // Red for North
   static const Color centralColor = Color(0xFF1E88E5); // Blue for Central
-  static const Color southColor = Color(0xFFFDD835); // Yellow for South
+  static const Color southColor = Color(0xFFFFD600); // Strong Yellow for South
+  
+  // Tab Colors (Retro 8x 9x style)
+  static const Color tabDirect = Color(0xFF1976D2);     // Classic Blue
+  static const Color tabHistory = Color(0xFF7B1FA2);    // Retro Purple
+  static const Color tabPrediction = Color(0xFF00796B); // Gameboy Teal
+  static const Color tabSettings = Color(0xFF455A64);   // Industrial Grey
   
   // Background Colors
   static const Color background = Color(0xFFF5F5F5);

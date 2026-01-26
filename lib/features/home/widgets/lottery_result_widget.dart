@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lottery_result.dart';
+import 'loto_table_widget.dart';
 
 class LotteryResultWidget extends StatelessWidget {
   final LotteryResult result;
@@ -31,23 +32,23 @@ class LotteryResultWidget extends StatelessWidget {
               children: [
                 Text(
                   result.province,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: result.region == 'south' ? Colors.black : Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
                 Text(
                   DateFormat('dd/MM/yyyy').format(result.date),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: result.region == 'south' ? Colors.black : Colors.white,
                     fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
-          
+
           if (result.isLive)
             Container(
               width: double.infinity,
@@ -79,40 +80,54 @@ class LotteryResultWidget extends StatelessWidget {
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
                 if (result.eighthPrize.isNotEmpty)
-                  _buildRow('Giải Tám', _formatNumbers(result.eighthPrize), isRed: true),
+                  _buildRow('Giải Tám', result.eighthPrize, isRed: true),
                 if (result.seventhPrize.isNotEmpty)
-                  _buildRow('Giải Bảy', _formatNumbers(result.seventhPrize)),
+                  _buildRow(
+                    'Giải Bảy',
+                    result.seventhPrize,
+                    isLarge: result.region == 'north',
+                    isRed: result.region == 'north',
+                  ),
                 if (result.featuredPrize('sixth').isNotEmpty)
-                  _buildRow('Giải Sáu', _formatNumbers(result.sixthPrize)),
-                 if (result.featuredPrize('fifth').isNotEmpty)
-                  _buildRow('Giải Năm', _formatNumbers(result.fifthPrize)),
-                 if (result.featuredPrize('fourth').isNotEmpty)
-                  _buildRow('Giải Tư', _formatNumbers(result.fourthPrize)),
-                 if (result.featuredPrize('third').isNotEmpty)
-                  _buildRow('Giải Ba', _formatNumbers(result.thirdPrize)),
-                 if (result.featuredPrize('second').isNotEmpty)
-                  _buildRow('Giải Nhì', _formatNumbers(result.secondPrize)),
-                 if (result.featuredPrize('first').isNotEmpty)
-                  _buildRow('Giải Nhất', _formatNumbers(result.firstPrize)),
-                 _buildRow(
-                  'Đặc Biệt', 
-                  result.specialPrize.isEmpty ? '...' : result.specialPrize, 
-                  isSpecial: true
+                  _buildRow('Giải Sáu', result.sixthPrize),
+                if (result.featuredPrize('fifth').isNotEmpty)
+                  _buildRow('Giải Năm', result.fifthPrize),
+                if (result.featuredPrize('fourth').isNotEmpty)
+                  _buildRow('Giải Tư', result.fourthPrize),
+                if (result.featuredPrize('third').isNotEmpty)
+                  _buildRow('Giải Ba', result.thirdPrize),
+                if (result.featuredPrize('second').isNotEmpty)
+                  _buildRow('Giải Nhì', result.secondPrize),
+                if (result.featuredPrize('first').isNotEmpty)
+                  _buildRow('Giải Nhất', result.firstPrize),
+                _buildRow(
+                  'Đặc Biệt',
+                  result.specialPrize.isEmpty ? [] : [result.specialPrize],
+                  isSpecial: true,
                 ),
               ],
             ),
+          ),
+
+          const Divider(height: 1),
+
+          // Loto Table
+          Padding(
+            padding: const EdgeInsets.all(0.0),
+            child: LotoTableWidget(result: result),
           ),
         ],
       ),
     );
   }
 
-  String _formatNumbers(List<String> numbers) {
-    if (numbers.isEmpty) return '...';
-    return numbers.join(' - ');
-  }
-
-  TableRow _buildRow(String title, String numbers, {bool isSpecial = false, bool isRed = false}) {
+  TableRow _buildRow(
+    String title,
+    List<String> numbers, {
+    bool isSpecial = false,
+    bool isRed = false,
+    bool isLarge = false,
+  }) {
     return TableRow(
       children: [
         Padding(
@@ -128,15 +143,33 @@ class LotteryResultWidget extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Text(
-            numbers,
-            style: TextStyle(
-              fontWeight: isSpecial ? FontWeight.bold : FontWeight.w500,
-              fontSize: isSpecial ? 24 : 16,
-              color: isSpecial ? AppColors.error : (isRed ? AppColors.error : Colors.black),
-            ),
-            textAlign: TextAlign.center,
-          ),
+          child: isSpecial
+              ? Text(
+                  numbers.firstOrNull ?? '...',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: AppColors.error,
+                  ),
+                  textAlign: TextAlign.center,
+                )
+              : Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: numbers
+                      .map(
+                        (n) => Text(
+                          n,
+                          style: TextStyle(
+                            fontWeight: isLarge ? FontWeight.bold : FontWeight.w500,
+                            fontSize: isLarge ? 24 : 16,
+                            color: isRed ? AppColors.error : Colors.black,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
         ),
       ],
     );
@@ -159,16 +192,25 @@ class LotteryResultWidget extends StatelessWidget {
 extension LotteryResultExtension on LotteryResult {
   // Helper to safely get lists even if they don't exist in some versions
   List<String> featuredPrize(String key) {
-    switch(key) {
-      case 'first': return firstPrize;
-      case 'second': return secondPrize;
-      case 'third': return thirdPrize;
-      case 'fourth': return fourthPrize;
-      case 'fifth': return fifthPrize;
-      case 'sixth': return sixthPrize;
-      case 'seventh': return seventhPrize;
-      case 'eighth': return eighthPrize;
-      default: return [];
+    switch (key) {
+      case 'first':
+        return firstPrize;
+      case 'second':
+        return secondPrize;
+      case 'third':
+        return thirdPrize;
+      case 'fourth':
+        return fourthPrize;
+      case 'fifth':
+        return fifthPrize;
+      case 'sixth':
+        return sixthPrize;
+      case 'seventh':
+        return seventhPrize;
+      case 'eighth':
+        return eighthPrize;
+      default:
+        return [];
     }
   }
 }
